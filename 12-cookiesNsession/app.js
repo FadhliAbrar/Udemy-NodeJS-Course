@@ -14,6 +14,7 @@ const errorController = require("./controllers/error");
 const User = require("./models/user");
 
 const app = express();
+// store have nothing to do with mongoose
 const store = new MongoDbStore({
   uri: MONGODB_URI,
   collection: "sessions",
@@ -36,6 +37,18 @@ app.use(
     store: store,
   })
 );
+
+app.use((req, res, next) => {
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id)
+    .then((user) => {
+      req.user = user;
+      next();
+    })
+    .catch();
+});
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
